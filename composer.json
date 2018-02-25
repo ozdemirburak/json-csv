@@ -1,0 +1,27 @@
+{
+    "name": "ozdemirburak/json-csv",
+    "description": "JSON to CSV and CSV to JSON converters in PHP.",
+    "keywords": ["json", "csv", "json to csv", "csv to json", "json2csv", "csv2json"],
+    "homepage": "https://github.com/ozdemirburak/json-csv",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Burak Özdemir",
+            "email": "mail@burakozdemir.co.uk",
+            "homepage": "https://burakozdemir.co.uk"
+        }
+    ],
+    "require": {
+        "php" : "~7.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit" : "~5.0|~6.0"
+    },
+    "autoload": {
+        "psr-4": { "OzdemirBurak\\JsonCsv\\": "src" }
+    },
+    "autoload-dev": {
+        "psr-4": { "OzdemirBurak\\JsonCsv\\Tests\\": "tests" }
+    },
+    "scripts": { "test": "vendor/bin/phpunit" }
+}
