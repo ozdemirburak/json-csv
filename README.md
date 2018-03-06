@@ -76,7 +76,7 @@ $csv->setConversionKey('options', JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_
 // To convert CSV to JSON string
 $jsonString = $csv->convert();
 // To convert CSV to JSON and save
-$csv->convertAndSave(__DIR__ . '/below.csv');
+$csv->convertAndSave(__DIR__ . '/below.json');
 // To convert CSV to JSON and force download on browser
 $csv->convertAndDownload();
 ```
