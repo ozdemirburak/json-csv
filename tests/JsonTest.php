@@ -46,6 +46,17 @@ class JsonTest extends TestCase
     }
 
     /**
+     * @group json-conversion-test
+     */
+    public function testConversionDynamicFormat()
+    {
+        $json = new Json(__DIR__ . '/data/dynamicFormat.json');
+        $result = ($json->convert());
+        $this->assertEquals(file_get_contents(__DIR__ . '/data/dynamicFormatResult.csv'), $result);
+    }
+
+
+    /**
      * @return \OzdemirBurak\JsonCsv\File\Json
      */
     private function init() : Json
