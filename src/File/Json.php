@@ -16,9 +16,28 @@ class Json extends AbstractFile
      */
     public function convert() : string
     {
-        return $this->toCsvString(array_map(function ($d) {
+        $data_decoded = json_decode($this->data, true);
+        $data_flattened = array_map(function ($d) {
             return $this->flatten($d);
-        }, json_decode($this->data, true)));
+        }, $data_decoded);
+
+        $keys = [];
+        foreach ($data_flattened as $entry_flattened) {
+            foreach ($entry_flattened as $key => $value) {
+                $keys[$key] = true;
+            }
+        }
+
+        $data_unified = [];
+        foreach ($data_flattened as $entry_flattened) {
+            $entry_unified = [];
+            foreach ($keys as $key => $foo) {
+                $entry_unified[$key] = array_key_exists($key, $entry_flattened) ? $entry_flattened[$key] : null;
+            }
+            $data_unified[] = $entry_unified;
+        }
+
+        return $this->toCsvString($data_unified);
     }
 
     /**
