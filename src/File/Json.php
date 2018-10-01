@@ -9,35 +9,29 @@ class Json extends AbstractFile
     /**
      * @var array
      */
-    protected $conversion = ['extension' => 'csv', 'type' => 'text/csv', 'delimiter' => ',', 'enclosure' => '"', 'escape' => '\\'];
+    protected $conversion = [
+        'extension' => 'csv',
+        'type' => 'text/csv',
+        'delimiter' => ',',
+        'enclosure' => '"',
+        'escape' => '\\',
+        'null' => null
+    ];
 
     /**
      * @return string
      */
-    public function convert() : string
+    public function convert(): string
     {
-        $data_decoded = json_decode($this->data, true);
-        $data_flattened = array_map(function ($d) {
+        $flattened = array_map(function ($d) {
             return $this->flatten($d);
-        }, $data_decoded);
-
-        $keys = [];
-        foreach ($data_flattened as $entry_flattened) {
-            foreach ($entry_flattened as $key => $value) {
-                $keys[$key] = true;
-            }
-        }
-
-        $data_unified = [];
-        foreach ($data_flattened as $entry_flattened) {
-            $entry_unified = [];
-            foreach ($keys as $key => $foo) {
-                $entry_unified[$key] = array_key_exists($key, $entry_flattened) ? $entry_flattened[$key] : null;
-            }
-            $data_unified[] = $entry_unified;
-        }
-
-        return $this->toCsvString($data_unified);
+        }, json_decode($this->data, true));
+        // create an array with all of the keys where each has a null value
+        $default = $this->getArrayOfNulls($flattened);
+        // merge default with the actual data so that non existent keys will have null values
+        return $this->toCsvString(array_map(function ($d) use ($default) {
+            return array_merge($default, $d);
+        }, $flattened));
     }
 
     /**
@@ -45,12 +39,24 @@ class Json extends AbstractFile
      *
      * @return string
      */
-    protected function toCsvString(array $data) : string
+    protected function toCsvString(array $data): string
     {
-        $f = fopen('php://temp', 'w');
-        fputcsv($f, array_keys(current($data)), $this->conversion['delimiter'], $this->conversion['enclosure'], $this->conversion['escape']);
+        $f = fopen('php://temp', 'wb');
+        fputcsv(
+            $f,
+            array_keys(current($data)),
+            $this->conversion['delimiter'],
+            $this->conversion['enclosure'],
+            $this->conversion['escape']
+        );
         foreach ($data as $row) {
-            fputcsv($f, $row, $this->conversion['delimiter'], $this->conversion['enclosure'], $this->conversion['escape']);
+            fputcsv(
+                $f,
+                $row,
+                $this->conversion['delimiter'],
+                $this->conversion['enclosure'],
+                $this->conversion['escape']
+            );
         }
         rewind($f);
         $csv = stream_get_contents($f);
@@ -65,7 +71,7 @@ class Json extends AbstractFile
      *
      * @return array
      */
-    protected function flatten(array $array = [], $prefix = '', array $result = []) : array
+    protected function flatten(array $array = [], $prefix = '', array $result = []): array
     {
         foreach ($array as $key => $value) {
             if (\is_array($value)) {
@@ -75,5 +81,16 @@ class Json extends AbstractFile
             }
         }
         return $result;
+    }
+
+    /**
+     * @param $flattened
+     *
+     * @return array
+     */
+    protected function getArrayOfNulls($flattened): array
+    {
+        $keys = array_keys(array_merge(...$flattened));
+        return array_fill_keys($keys, $this->conversion['null']);
     }
 }

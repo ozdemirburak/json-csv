@@ -129,7 +129,7 @@ $ composer test
 
 ## Known Issues
 
-Currently, it is assumed that each object shares the same properties while converting JSON to CSV. So if one object has a property that the other one does not have, then it will be a major problem.
+Currently, there are not any issues that are known.
 
 ## Contributing
 
