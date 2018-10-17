@@ -42,22 +42,10 @@ class Json extends AbstractFile
     protected function toCsvString(array $data): string
     {
         $f = fopen('php://temp', 'wb');
-        fputcsv(
-            $f,
-            array_keys(current($data)),
-            $this->conversion['delimiter'],
-            $this->conversion['enclosure'],
-            $this->conversion['escape']
-        );
-        foreach ($data as $row) {
-            fputcsv(
-                $f,
-                $row,
-                $this->conversion['delimiter'],
-                $this->conversion['enclosure'],
-                $this->conversion['escape']
-            );
-        }
+        $this->putCsv($f, array_keys(current($data)));
+        array_walk($data, function ($row) use (&$f) {
+            $this->putCsv($f, $row);
+        });
         rewind($f);
         $csv = stream_get_contents($f);
         fclose($f);
@@ -90,7 +78,25 @@ class Json extends AbstractFile
      */
     protected function getArrayOfNulls($flattened): array
     {
+        $flattened = array_values($flattened);
         $keys = array_keys(array_merge(...$flattened));
         return array_fill_keys($keys, $this->conversion['null']);
+    }
+
+    /**
+     * @param $handle
+     * @param $fields
+     *
+     * @return bool|int
+     */
+    private function putCsv($handle, $fields)
+    {
+        return fputcsv(
+            $handle,
+            $fields,
+            $this->conversion['delimiter'],
+            $this->conversion['enclosure'],
+            $this->conversion['escape']
+        );
     }
 }

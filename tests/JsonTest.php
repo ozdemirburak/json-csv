@@ -2,64 +2,70 @@
 
 namespace OzdemirBurak\JsonCsv\Tests;
 
-use OzdemirBurak\JsonCsv\File\Json;
+use OzdemirBurak\JsonCsv\Tests\Traits\TestTrait;
 use PHPUnit\Framework\TestCase;
 
 class JsonTest extends TestCase
 {
+    use TestTrait;
+
+    /**
+     * @var string
+     */
+    protected $ext =  'csv';
+
     /**
      * @group json-basic-test
      */
     public function testFileReading()
     {
-        $this->assertEquals('countries', ($json = $this->init())->getFilename());
+        $this->assertEquals('countries', ($json = $this->initJson())->getFilename());
         $this->assertContains('"common": "Turkey"', $json->getData());
     }
 
     /**
      * @group json-conversion-test
      */
-    public function testConversion()
+    public function testPeople()
     {
-        $this->assertContains("name_common,name_official,name_native,area,latlng_0,latlng_1\n", $this->init()->convert());
+        $this->checkConversion('people');
     }
 
     /**
      * @group json-conversion-test
      */
-    public function testConversionAndSave()
+    public function testProperties()
     {
-        $this->init()->convertAndSave($path = __DIR__ . '/data/countries.csv');
-        $this->assertFileExists($path);
-        $this->assertContains("Turkey,\"Republic of Turkey\",Türkiye,783562,39,35\n", file_get_contents($path));
-        unlink($path);
-        $this->assertFileNotExists($path);
+        $this->checkConversion('properties');
     }
 
     /**
      * @group json-conversion-test
+     */
+    public function testStats()
+    {
+        $this->checkConversion('stats');
+    }
+
+    /**
+     * @group json-conversion-download-save-test
      */
     public function testConversionAndDownload()
     {
-        $this->init()->convertAndDownload(null, false);
+        $this->initJson()->convertAndDownload(null, false);
         $this->expectOutputRegex('/Turkey,"Republic of Turkey",Türkiye,783562,39,35\\n/');
     }
 
     /**
-     * @group json-conversion-test
+     * @group json-conversion-download-save-test
      */
-    public function testMixedProperties()
+    public function testConversionAndSave()
     {
-        $json = new Json(__DIR__ . '/data/mixed-properties.json');
-        $result = $json->convert();
-        $this->assertStringEqualsFile(__DIR__ . '/data/mixed-properties.csv', $result);
-    }
-
-    /**
-     * @return \OzdemirBurak\JsonCsv\File\Json
-     */
-    private function init() : Json
-    {
-        return new Json(__DIR__ . '/data/countries.json');
+        $path = $this->path('iris', 'countries');
+        $this->initJson()->convertAndSave($path);
+        $this->assertFileExists($path);
+        $this->assertContains("Turkey,\"Republic of Turkey\",Türkiye,783562,39,35\n", file_get_contents($path));
+        unlink($path);
+        $this->assertFileNotExists($path);
     }
 }
