@@ -2,17 +2,24 @@
 
 namespace OzdemirBurak\JsonCsv\Tests;
 
-use OzdemirBurak\JsonCsv\File\Csv;
+use OzdemirBurak\JsonCsv\Tests\Traits\TestTrait;
 use PHPUnit\Framework\TestCase;
 
 class CsvTest extends TestCase
 {
+    use TestTrait;
+
+    /**
+     * @var string
+     */
+    protected $ext =  'json';
+
     /**
      * @group csv-basic-test
      */
     public function testFileReading()
     {
-        $this->assertEquals('iris', ($csv = $this->init())->getFilename());
+        $this->assertEquals('iris', ($csv = $this->initCsv())->getFilename());
         $this->assertContains('6.3,3.3,6.0,2.5,Iris-virginica', $csv->getData());
     }
 
@@ -21,44 +28,31 @@ class CsvTest extends TestCase
      */
     public function testSetter()
     {
-        $conversion = $this->init()->setConversionKey('options', $options = JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+        $options = JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES;
+        $conversion = $this->initCsv()->setConversionKey('options', $options);
         $this->assertEquals($options, $conversion['options']);
     }
 
     /**
-     * @group csv-conversion-test
-     */
-    public function testConversion()
-    {
-        $this->assertContains('{"SepalLength":"6.3","SepalWidth":"3.3","PetalLength":"6.0","PetalWidth":"2.5","Name":"Iris-virginica"}', $this->init()->convert());
-    }
-
-    /**
-     * @group csv-conversion-test
-     */
-    public function testConversionAndSave()
-    {
-        $this->init()->convertAndSave($path = __DIR__ . '/data/iris.json');
-        $this->assertFileExists($path);
-        $this->assertContains('{"SepalLength":"6.3","SepalWidth":"3.3","PetalLength":"6.0","PetalWidth":"2.5","Name":"Iris-virginica"}', file_get_contents($path));
-        unlink($path);
-        $this->assertFileNotExists($path);
-    }
-
-    /**
-     * @group csv-conversion-test
+     * @group csv-conversion-download-save-test
      */
     public function testConversionAndDownload()
     {
-        $this->init()->convertAndDownload(null, false);
-        $this->expectOutputRegex('/{"SepalLength":"6.3","SepalWidth":"3.3","PetalLength":"6.0","PetalWidth":"2.5","Name":"Iris-virginica"}/');
+        $this->initCsv()->convertAndDownload(null, false);
+        $this->expectOutputRegex('/{"SL":"6.3","SW":"3.3","PL":"6.0","PW":"2.5","Name":"Iris-virginica"}/');
     }
 
     /**
-     * @return \OzdemirBurak\JsonCsv\File\Csv
+     * @group csv-conversion-download-save-test
      */
-    private function init() : Csv
+    public function testConversionAndSave()
     {
-        return new Csv(__DIR__ . '/data/iris.csv');
+        $path = $this->path('iris', 'json');
+        $this->initCsv()->convertAndSave($path);
+        $this->assertFileExists($path);
+        $json = '{"SL":"6.3","SW":"3.3","PL":"6.0","PW":"2.5","Name":"Iris-virginica"}';
+        $this->assertContains($json, file_get_contents($path));
+        unlink($path);
+        $this->assertFileNotExists($path);
     }
 }

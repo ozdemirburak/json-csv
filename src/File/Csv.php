@@ -23,23 +23,29 @@ class Csv extends AbstractFile
      */
     public function convert(): string
     {
-        $data = explode("\n", $this->data);
-        $keys = str_getcsv(
-            array_shift($data),
+        $data = $this->parseData();
+        $keys = $this->parseCsv(array_shift($data));
+        return json_encode(array_map(function ($line) use ($keys) {
+            return array_combine($keys, $this->parseCsv($line));
+        }, $data), $this->conversion['options']);
+    }
+
+    private function parseCsv($line)
+    {
+        return str_getcsv(
+            $line,
             $this->conversion['delimiter'],
             $this->conversion['enclosure'],
             $this->conversion['escape']
         );
-        return json_encode(array_map(function ($line) use ($keys) {
-            return array_combine(
-                $keys,
-                str_getcsv(
-                    $line,
-                    $this->conversion['delimiter'],
-                    $this->conversion['enclosure'],
-                    $this->conversion['escape']
-                )
-            );
-        }, $data), $this->conversion['options']);
+    }
+
+    private function parseData()
+    {
+        $data = explode("\n", $this->data);
+        if (end($data) === '') {
+            array_pop($data);
+        }
+        return $data;
     }
 }
