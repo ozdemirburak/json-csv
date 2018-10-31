@@ -34,7 +34,7 @@ class Csv extends AbstractFile
         $jsonObjects = array_map(function ($line) use ($splitKeys) {
             $values = $this->parseCsv($line);
             $jsonObject = [];
-            for ($valueIndex = 0; $valueIndex < count($values); $valueIndex++) {
+            for ($valueIndex = 0, $count = count($values); $valueIndex < $count; $valueIndex++) {
                 if ($values[$valueIndex] == "") {
                     continue;
                 }
