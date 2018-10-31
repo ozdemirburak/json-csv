@@ -15,7 +15,9 @@ class Csv extends AbstractFile
         'options' => 0,
         'delimiter' => ',',
         'enclosure' => '"',
-        'escape' => '\\'
+        'escape' => '\\',
+        'join' => '_',
+        'numbers' => 'strings'
     ];
 
     /**
@@ -25,9 +27,40 @@ class Csv extends AbstractFile
     {
         $data = $this->parseData();
         $keys = $this->parseCsv(array_shift($data));
-        return json_encode(array_map(function ($line) use ($keys) {
-            return array_combine($keys, $this->parseCsv($line));
-        }, $data), $this->conversion['options']);
+        $splitKeys = array_map(function ($key) {
+            return explode($this->conversion['join'], $key);
+        }, $keys);
+
+        $jsonObjects = array_map(function ($line) use ($splitKeys) {
+            $values = $this->parseCsv($line);
+            $jsonObject = [];
+            for ($valueIndex = 0, $count = count($values); $valueIndex < $count; $valueIndex++) {
+                if ($values[$valueIndex] == "") {
+                    continue;
+                }
+                $this->setJsonValue($splitKeys[$valueIndex], 0, $jsonObject, $values[$valueIndex]);
+            }
+            return $jsonObject;
+        }, $data);
+
+        return json_encode($jsonObjects, $this->conversion['options']);
+    }
+
+    private function setJsonValue($splitKey, $splitKeyIndex, &$jsonObject, $value)
+    {
+        $keyPart = $splitKey[$splitKeyIndex];
+
+        if (count($splitKey) > $splitKeyIndex+1) {
+            if (!array_key_exists($keyPart, $jsonObject)) {
+                $jsonObject[$keyPart] = [];
+            }
+            $this->setJsonValue($splitKey, $splitKeyIndex+1, $jsonObject[$keyPart], $value);
+        } else {
+            if ($this->conversion['numbers'] == 'numbers' && is_numeric($value)) {
+                $value = 0 + $value;
+            }
+            $jsonObject[$keyPart] = $value;
+        }
     }
 
     private function parseCsv($line)
