@@ -15,6 +15,7 @@ class Json extends AbstractFile
         'delimiter' => ',',
         'enclosure' => '"',
         'escape' => '\\',
+        'join' => '_',
         'null' => null
     ];
 
@@ -63,7 +64,7 @@ class Json extends AbstractFile
     {
         foreach ($array as $key => $value) {
             if (\is_array($value)) {
-                $result = array_merge($result, $this->flatten($value, $prefix . $key . '_'));
+                $result = array_merge($result, $this->flatten($value, $prefix . $key . $this->conversion['join']));
             } else {
                 $result[$prefix . $key] = $value;
             }
