@@ -16,18 +16,13 @@ class JsonReverseTest extends TestCase
     private function checkReverseConversion($file, $join = '_')
     {
         $pathCsvOut = $this->path($file . '.out', 'csv');
-
         $jsonConverter = $this->initJson($file);
         $jsonConverter->setConversionKey('join', $join);
         $jsonConverter->convertAndSave($pathCsvOut);
-
-        $pathJsonOut = $this->path($file . '.out', 'json');
-
         $csvConverter = $this->initCsv($file . '.out');
         $csvConverter->setConversionKey('join', $join);
         $csvConverter->setConversionKey('numbers', 'numbers');
-        $csvConverter->convertAndSave($pathJsonOut);
-
+        $csvConverter->convertAndSave($pathJsonOut = $this->path($file . '.out', 'json'));
         try {
             $this->assertJsonFileEqualsJsonFile($this->path($file, 'json'), $pathJsonOut);
         } finally {
@@ -63,14 +58,12 @@ class JsonReverseTest extends TestCase
     }
 
     /**
-     * @group json-conversion-test
+     * @TODO resolve issues which cause this test to fail
+     * @group json-conversion-failing-test
      */
-/**
- * @TODO resolve issues which cause this test to fail
- *
     public function testStats()
     {
+        $this->markTestSkipped();
         $this->checkReverseConversion('stats');
     }
- */
 }
