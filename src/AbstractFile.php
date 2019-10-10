@@ -71,8 +71,8 @@ abstract class AbstractFile
     }
 
     /**
-     * @param string $key
-     * @param string $value
+     * @param string     $key
+     * @param string|int $value
      *
      * @return array
      */
