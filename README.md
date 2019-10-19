@@ -1,4 +1,4 @@
-# JSON to CSV and CSV to JSON Converter
+# JSON to CSV and CSV to JSON Converter Library in PHP
 
 [![Latest Version on Packagist][ico-version]][link-packagist]
 [![Software License][ico-license]](LICENSE.md)
