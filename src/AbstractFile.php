@@ -26,7 +26,7 @@ abstract class AbstractFile
      */
     public function __construct($filepath)
     {
-        list($this->filename, $this->data) = [pathinfo($filepath, PATHINFO_FILENAME), file_get_contents($filepath)];
+        [$this->filename, $this->data] = [pathinfo($filepath, PATHINFO_FILENAME), file_get_contents($filepath)];
     }
 
     /**

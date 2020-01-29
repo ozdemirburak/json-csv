@@ -44,8 +44,8 @@ class Json extends AbstractFile
     protected function toCsvString(array $data): string
     {
         $f = fopen('php://temp', 'wb');
-        if($this->conversion["utf8_encoding"]) {
-          fprintf($f, chr(0xEF).chr(0xBB).chr(0xBF));
+        if ($this->conversion['utf8_encoding']) {
+            fprintf($f, chr(0xEF) . chr(0xBB) . chr(0xBF));
         }
         $this->putCsv($f, array_keys(current($data)));
         array_walk($data, function ($row) use (&$f) {
