@@ -26,7 +26,8 @@ use OzdemirBurak\JsonCsv\File\Json;
 $json = new Json(__DIR__ . '/above.json');
 // To convert JSON to CSV string
 $csvString = $json->convert();
-// To convert JSON to CSV and save
+// To set a conversion option then convert JSON to CSV and save
+$json->setConversionKey('utf8_encoding', true);
 $json->convertAndSave(__DIR__ . '/above.csv');
 // To convert JSON to CSV and force download on browser
 $json->convertAndDownload();

@@ -20,7 +20,7 @@ class CsvTest extends TestCase
     public function testFileReading()
     {
         $this->assertEquals('iris', ($csv = $this->initCsv())->getFilename());
-        $this->assertContains('6.3,3.3,6.0,2.5,Iris-virginica', $csv->getData());
+        $this->assertStringContainsString('6.3,3.3,6.0,2.5,Iris-virginica', $csv->getData());
     }
 
     /**
@@ -51,7 +51,7 @@ class CsvTest extends TestCase
         $this->initCsv()->convertAndSave($path);
         $this->assertFileExists($path);
         $json = '{"SL":"6.3","SW":"3.3","PL":"6.0","PW":"2.5","Name":"Iris-virginica"}';
-        $this->assertContains($json, file_get_contents($path));
+        $this->assertStringContainsString($json, file_get_contents($path));
         unlink($path);
         $this->assertFileNotExists($path);
     }

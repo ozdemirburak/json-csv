@@ -20,7 +20,16 @@ class JsonTest extends TestCase
     public function testFileReading()
     {
         $this->assertEquals('countries', ($json = $this->initJson())->getFilename());
-        $this->assertContains('"common": "Turkey"', $json->getData());
+        $this->assertStringContainsString('"common": "Turkey"', $json->getData());
+    }
+
+    /**
+     * @group json-basic-test
+     */
+    public function testSetter()
+    {
+        $conversion = $this->initJson()->setConversionKey('utf8_encoding', true);
+        $this->assertEquals(true, $conversion['utf8_encoding']);
     }
 
     /**
@@ -64,7 +73,7 @@ class JsonTest extends TestCase
         $path = $this->path('iris', 'countries');
         $this->initJson()->convertAndSave($path);
         $this->assertFileExists($path);
-        $this->assertContains("Turkey,\"Republic of Turkey\",Türkiye,783562,39,35\n", file_get_contents($path));
+        $this->assertStringContainsString("Turkey,\"Republic of Turkey\",Türkiye,783562,39,35\n", file_get_contents($path));
         unlink($path);
         $this->assertFileNotExists($path);
     }
