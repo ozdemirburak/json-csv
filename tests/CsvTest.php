@@ -53,6 +53,6 @@ class CsvTest extends TestCase
         $json = '{"SL":"6.3","SW":"3.3","PL":"6.0","PW":"2.5","Name":"Iris-virginica"}';
         $this->assertStringContainsString($json, file_get_contents($path));
         unlink($path);
-        $this->assertFileNotExists($path);
+        $this->assertFileDoesNotExist($path);
     }
 }
