@@ -75,6 +75,6 @@ class JsonTest extends TestCase
         $this->assertFileExists($path);
         $this->assertStringContainsString("Turkey,\"Republic of Turkey\",Türkiye,783562,39,35\n", file_get_contents($path));
         unlink($path);
-        $this->assertFileNotExists($path);
+        $this->assertFileDoesNotExist($path);
     }
 }

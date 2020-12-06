@@ -27,9 +27,9 @@ class JsonReverseTest extends TestCase
             $this->assertJsonFileEqualsJsonFile($this->path($file, 'json'), $pathJsonOut);
         } finally {
             unlink($pathCsvOut);
-            $this->assertFileNotExists($pathCsvOut);
+            $this->assertFileDoesNotExist($pathCsvOut);
             unlink($pathJsonOut);
-            $this->assertFileNotExists($pathJsonOut);
+            $this->assertFileDoesNotExist($pathJsonOut);
         }
     }
 
