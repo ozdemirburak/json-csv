@@ -34,16 +34,22 @@ trait TestTrait
      */
     private function initCsv($file = 'iris'): Csv
     {
-        return new Csv($this->path($file, 'csv'));
+        if ($file !== null) {
+            return new Csv($this->path($file, 'csv'));
+        }
+        return new Csv();
     }
 
     /**
-     * @param string $file
+     * @param string|null $file
      *
      * @return \OzdemirBurak\JsonCsv\File\Json
      */
     private function initJson($file = 'countries'): Json
     {
-        return new Json($this->path($file, 'json'));
+        if ($file !== null) {
+            return new Json($this->path($file, 'json'));
+        }
+        return new Json();
     }
 }

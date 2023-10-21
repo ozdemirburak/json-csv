@@ -33,6 +33,12 @@ $json->convertAndSave(__DIR__ . '/above.csv');
 $json->convertAndDownload();
 ```
 
+You can also convert directly from a JSON string using the `fromString` method.
+
+``` php
+$csvString = (new Json())->fromString('{"name": "Buddha", "age": 80}')->convert();
+```
+
 Assume that the input JSON is something like below. 
 
 ```json
@@ -80,6 +86,12 @@ $jsonString = $csv->convert();
 $csv->convertAndSave(__DIR__ . '/below.json');
 // To convert CSV to JSON and force download on browser
 $csv->convertAndDownload();
+```
+
+You can also convert directly from a CSV string using the `fromString` method.
+
+``` php
+$jsonString = (new Csv())->fromString('[{"name":"Buddha","age":"80"}]')->convert();
 ```
 
 Assume that the input CSV file is something like below. 

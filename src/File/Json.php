@@ -25,20 +25,26 @@ class Json extends AbstractFile
      */
     public function convert(): string
     {
-        $flattened = array_map(function ($d) {
-            return $this->flatten($d);
-        }, json_decode($this->data, true));
-        // create an array with all of the keys where each has a null value
+        $data = json_decode($this->data, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \RuntimeException('Invalid JSON data.');
+        }
+        if ($this->isAssociativeArray($data) && !$this->containsArray($data)) {
+            return $this->toCsvString([$data]);
+        }
+        $flattened = array_map([$this, 'flatten'], $data);
         $default = $this->getArrayOfNulls($flattened);
-        // merge default with the actual data so that non existent keys will have null values
-        return $this->toCsvString(array_map(function ($d) use ($default) {
-            return array_merge($default, $d);
-        }, $flattened));
+        $merged = array_map(
+            function ($d) use ($default) {
+                return array_merge($default, $d);
+            },
+            $flattened
+        );
+        return $this->toCsvString($merged);
     }
 
     /**
      * @param array $data
-     *
      * @return string
      */
     protected function toCsvString(array $data): string
@@ -48,7 +54,7 @@ class Json extends AbstractFile
             fprintf($f, chr(0xEF) . chr(0xBB) . chr(0xBF));
         }
         $this->putCsv($f, array_keys(current($data)));
-        array_walk($data, function ($row) use (&$f) {
+        array_walk($data, function ($row) use ($f) {
             $this->putCsv($f, $row);
         });
         rewind($f);
@@ -58,13 +64,12 @@ class Json extends AbstractFile
     }
 
     /**
-     * @param array  $array
+     * @param array $array
      * @param string $prefix
      * @param array  $result
-     *
      * @return array
      */
-    protected function flatten(array $array = [], $prefix = '', array $result = []): array
+    protected function flatten(array $array = [], string $prefix = '', array $result = []): array
     {
         foreach ($array as $key => $value) {
             if (\is_array($value)) {
@@ -77,11 +82,10 @@ class Json extends AbstractFile
     }
 
     /**
-     * @param $flattened
-     *
+     * @param array $flattened
      * @return array
      */
-    protected function getArrayOfNulls($flattened): array
+    protected function getArrayOfNulls(array $flattened): array
     {
         $flattened = array_values($flattened);
         $keys = array_keys(array_merge(...$flattened));
@@ -89,12 +93,11 @@ class Json extends AbstractFile
     }
 
     /**
-     * @param $handle
-     * @param $fields
-     *
+     * @param resource $handle
+     * @param array    $fields
      * @return bool|int
      */
-    private function putCsv($handle, $fields)
+    private function putCsv($handle, array $fields)
     {
         return fputcsv(
             $handle,
@@ -103,5 +106,35 @@ class Json extends AbstractFile
             $this->conversion['enclosure'],
             $this->conversion['escape']
         );
+    }
+
+    /**
+     * @param array $data
+     * @return bool
+     */
+    private function isAssociativeArray(array $data): bool
+    {
+        return array_keys($data) !== range(0, count($data) - 1);
+    }
+
+    /**
+     * Check if the file/data contains nested arrays
+     *
+     * @param $array
+     *
+     * @return bool
+     */
+    private function containsArray(array $array): bool
+    {
+        foreach ($array as $data) {
+            if (is_iterable($data)) {
+                foreach ($data as $d) {
+                    if (is_array($d)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 }

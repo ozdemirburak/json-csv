@@ -38,7 +38,7 @@ class JsonReverseTest extends TestCase
      */
     public function testWhatever()
     {
-        $this->checkReverseConversion('example');
+        $this->checkReverseConversion('countries');
     }
 
     /**
