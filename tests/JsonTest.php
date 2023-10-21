@@ -15,6 +15,11 @@ class JsonTest extends TestCase
     protected $ext =  'csv';
 
     /**
+     * @var string
+     */
+    protected $jsonString = '{"name": "Buddha", "age": 80}';
+
+    /**
      * @group json-basic-test
      */
     public function testFileReading()
@@ -30,6 +35,25 @@ class JsonTest extends TestCase
     {
         $conversion = $this->initJson()->setConversionKey('utf8_encoding', true);
         $this->assertEquals(true, $conversion['utf8_encoding']);
+    }
+
+    /**
+     * @group json-basic-test
+     */
+    public function testFromString()
+    {
+        $json = $this->initJson(null)->fromString($this->jsonString);
+        $this->assertEquals($this->jsonString, $json->getData());
+    }
+
+    /**
+     * @group json-conversion-test
+     */
+    public function testFromStringConversion()
+    {
+        $expected = "name,age\nBuddha,80\n";
+        $actual = $this->initJson()->fromString($this->jsonString)->convert();
+        $this->assertEquals($expected, $actual);
     }
 
     /**

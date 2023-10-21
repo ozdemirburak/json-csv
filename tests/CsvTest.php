@@ -15,6 +15,11 @@ class CsvTest extends TestCase
     protected $ext =  'json';
 
     /**
+     * @var string
+     */
+    protected $csvString = "name,age\nBuddha,80\n";
+
+    /**
      * @group csv-basic-test
      */
     public function testFileReading()
@@ -31,6 +36,25 @@ class CsvTest extends TestCase
         $options = JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES;
         $conversion = $this->initCsv()->setConversionKey('options', $options);
         $this->assertEquals($options, $conversion['options']);
+    }
+
+    /**
+     * @group csv-basic-test
+     */
+    public function testFromString()
+    {
+        $csv = $this->initCsv(null)->fromString($this->csvString);
+        $this->assertEquals($this->csvString, $csv->getData());
+    }
+
+    /**
+     * @group csv-conversion-test
+     */
+    public function testFromStringConversion()
+    {
+        $expected = '[{"name":"Buddha","age":"80"}]';
+        $actual = $this->initCsv()->fromString($this->csvString)->convert();
+        $this->assertEquals($expected, $actual);
     }
 
     /**
