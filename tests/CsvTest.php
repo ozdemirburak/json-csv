@@ -4,6 +4,7 @@ namespace OzdemirBurak\JsonCsv\Tests;
 
 use OzdemirBurak\JsonCsv\Tests\Traits\TestTrait;
 use PHPUnit\Framework\TestCase;
+use OzdemirBurak\JsonCsv\Exceptions\InvalidCsvException;
 
 class CsvTest extends TestCase
 {
@@ -47,6 +48,14 @@ class CsvTest extends TestCase
         $this->assertEquals($this->csvString, $csv->getData());
     }
 
+    /**
+     * @group csv-basic-test
+     */
+    public function testEmptyCsvString()
+    {
+        $csv = $this->initCsv(null)->fromString("");
+        $this->assertEquals("", $csv->getData());
+    }
     /**
      * @group csv-conversion-test
      */
