@@ -4,7 +4,6 @@ namespace OzdemirBurak\JsonCsv\Tests;
 
 use OzdemirBurak\JsonCsv\Tests\Traits\TestTrait;
 use PHPUnit\Framework\TestCase;
-use OzdemirBurak\JsonCsv\Exceptions\InvalidCsvException;
 
 class CsvTest extends TestCase
 {
