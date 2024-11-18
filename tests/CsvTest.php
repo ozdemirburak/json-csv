@@ -48,6 +48,14 @@ class CsvTest extends TestCase
     }
 
     /**
+     * @group csv-basic-test
+     */
+    public function testEmptyCsvString()
+    {
+        $csv = $this->initCsv(null)->fromString("");
+        $this->assertEquals("", $csv->getData());
+    }
+    /**
      * @group csv-conversion-test
      */
     public function testFromStringConversion()
