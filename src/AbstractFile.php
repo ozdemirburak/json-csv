@@ -67,6 +67,7 @@ abstract class AbstractFile
     {
         header('Content-disposition: attachment; filename=' . $filename . '.' . $this->conversion['extension']);
         header('Content-type: ' . $this->conversion['type']);
+        header('Content-length: ' . filesize($filename));
     }
 
     /**
