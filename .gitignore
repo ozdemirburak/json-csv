@@ -1,4 +1,9 @@
-build
+.claude/
+.idea/
+.vscode/
+/build/
+/vendor/
+.phpunit.cache
+.phpunit.result.cache
 composer.lock
-vendor
-*.cache
+CLAUDE.MD

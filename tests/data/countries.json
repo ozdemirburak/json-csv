@@ -1,20 +1,20 @@
 [
   {
     "name": {
-      "common": "Turkey",
-      "official": "Republic of Turkey",
-      "native": "T\u00fcrkiye"
+      "common": "Türkiye",
+      "official": "Republic of Türkiye",
+      "native": "Türkiye"
     },
     "area": 783562,
     "latlng": [39, 35]
   },
   {
     "name": {
-      "common": "Israel",
-      "official": "State of Israel",
-      "native": "\u05d9\u05e9\u05e8\u05d0\u05dc"
+      "common": "Japan",
+      "official": "Japan",
+      "native": "日本"
     },
-    "area": 20770,
-    "latlng": [31.30, 34.45]
+    "area": 377975,
+    "latlng": [36, 138]
   }
 ]

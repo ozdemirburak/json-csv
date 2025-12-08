@@ -3,13 +3,11 @@
 namespace OzdemirBurak\JsonCsv\File;
 
 use OzdemirBurak\JsonCsv\AbstractFile;
+use RuntimeException;
 
 class Csv extends AbstractFile
 {
-    /**
-     * @var array
-     */
-    protected $conversion = [
+    protected array $conversion = [
         'extension' => 'json',
         'type' => 'application/json',
         'options' => 0,
@@ -17,122 +15,140 @@ class Csv extends AbstractFile
         'enclosure' => '"',
         'escape' => '\\',
         'join' => '_',
-        'numbers' => 'strings'
+        'numeric' => false,
     ];
 
-    /**
-     * Converts CSV data to JSON.
-     *
-     * @return string JSON representation of CSV data.
-     */
     public function convert(): string
     {
-        $data = $this->parseData();
-        $keys = $this->parseCsv(array_shift($data));
+        $rows = $this->parseData();
+        if ($rows === []) {
+            return '[]';
+        }
+        $headerRow = array_shift($rows);
+        if ($headerRow === null) {
+            return '[]';
+        }
+        $keys = $this->parseCsvLine($headerRow);
+        if ($keys === [] || $rows === []) {
+            return '[]';
+        }
         $splitKeys = $this->splitKeys($keys);
-        $jsonObjects = array_map([$this, 'convertLineToJson'], $data, array_fill(0, count($data), $splitKeys));
+        $jsonObjects = [];
+        foreach ($rows as $row) {
+            $values = $this->parseCsvLine($row);
+            $jsonObject = $this->buildJsonObject($values, $splitKeys);
+
+            if ($jsonObject !== []) {
+                $jsonObjects[] = $jsonObject;
+            }
+        }
         $json = json_encode($jsonObjects, $this->conversion['options']);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \RuntimeException('JSON encoding failed: ' . json_last_error_msg());
+        if ($json === false) {
+            throw new RuntimeException('JSON encoding failed: ' . json_last_error_msg());
         }
         return $json;
     }
 
-    /**
-     * Splits keys based on the configured join delimiter.
-     *
-     * @param array $keys
-     * @return array
-     */
     private function splitKeys(array $keys): array
     {
-        return array_map(function ($key) {
-            return explode($this->conversion['join'], $key);
-        }, $keys);
+        return array_map(
+            fn(string $key): array => explode($this->conversion['join'], $key),
+            $keys
+        );
     }
 
-    /**
-     * Converts a CSV line to a JSON object.
-     *
-     * @param string $line
-     * @param array $splitKeys
-     * @return array
-     */
-    private function convertLineToJson(string $line, array $splitKeys): array
-    {
-        return $this->getJsonObject($this->parseCsv($line), $splitKeys);
-    }
-
-    /**
-     * Creates a JSON object from a CSV line.
-     *
-     * @param array $values CSV values.
-     * @param array $splitKeys Split keys.
-     * @return array JSON object.
-     */
-    private function getJsonObject(array $values, array $splitKeys): array
+    private function buildJsonObject(array $values, array $splitKeys): array
     {
         $jsonObject = [];
-        for ($valueIndex = 0, $count = count($values); $valueIndex < $count; $valueIndex++) {
-            if ($values[$valueIndex] === '') {
+        $count = min(count($values), count($splitKeys));
+        for ($i = 0; $i < $count; $i++) {
+            if ($values[$i] === '') {
                 continue;
             }
-            $this->setJsonValue($splitKeys[$valueIndex], 0, $jsonObject, $values[$valueIndex]);
+            $this->setNestedValue($jsonObject, $splitKeys[$i], $values[$i]);
         }
         return $jsonObject;
     }
 
-    /**
-     * Sets a value in a JSON object.
-     *
-     * @param array $splitKey Split key.
-     * @param int   $splitKeyIndex Split key index.
-     * @param array $jsonObject JSON object.
-     * @param mixed $value Value.
-     */
-    private function setJsonValue(array $splitKey, int $splitKeyIndex, array &$jsonObject, $value): void
+    private function setNestedValue(array &$target, array $keyParts, mixed $value): void
     {
-        $keyPart = $splitKey[$splitKeyIndex];
-        if (count($splitKey) > $splitKeyIndex + 1) {
-            if (!array_key_exists($keyPart, $jsonObject)) {
-                $jsonObject[$keyPart] = [];
+        $lastIndex = count($keyParts) - 1;
+        foreach ($keyParts as $index => $keyPart) {
+            if ($index === $lastIndex) {
+                $target[$keyPart] = $this->convertValue($value);
+            } else {
+                if (!isset($target[$keyPart]) || !is_array($target[$keyPart])) {
+                    $target[$keyPart] = [];
+                }
+                $target = &$target[$keyPart];
             }
-            $this->setJsonValue($splitKey, $splitKeyIndex + 1, $jsonObject[$keyPart], $value);
-        } else {
-            if (is_numeric($value) && $this->conversion['numbers'] === 'numbers') {
-                $value = 0 + $value;
-            }
-            $jsonObject[$keyPart] = $value;
         }
     }
 
-    /**
-     * Parses a CSV line.
-     *
-     * @param string $line CSV line.
-     * @return array Parsed CSV line.
-     */
-    private function parseCsv(string $line): array
+    private function convertValue(mixed $value): mixed
     {
-        return str_getcsv(
+        if ($this->conversion['numeric'] && is_numeric($value)) {
+            return $value + 0;
+        }
+        return $value;
+    }
+
+    private function parseCsvLine(string $line): array
+    {
+        $result = str_getcsv(
             $line,
             $this->conversion['delimiter'],
             $this->conversion['enclosure'],
             $this->conversion['escape']
         );
+        return $result !== [null] ? $result : [];
     }
 
-    /**
-     * Parses CSV data.
-     *
-     * @return array Parsed CSV data.
-     */
     private function parseData(): array
     {
-        $data = explode("\n", $this->data);
-        if (end($data) === '') {
-            array_pop($data);
+        if ($this->data === '') {
+            return [];
         }
-        return $data;
+        // Normalize line endings
+        $normalized = str_replace("\r\n", "\n", $this->data);
+        $normalized = str_replace("\r", "\n", $normalized);
+        // Handle quoted fields containing newlines by using proper CSV parsing
+        $rows = $this->parseCsvWithQuotedNewlines($normalized);
+        // Remove empty trailing row
+        if ($rows !== [] && end($rows) === '') {
+            array_pop($rows);
+        }
+        return $rows;
+    }
+
+    private function parseCsvWithQuotedNewlines(string $data): array
+    {
+        $rows = [];
+        $currentRow = '';
+        $inQuotes = false;
+        $length = strlen($data);
+        for ($i = 0; $i < $length; $i++) {
+            $char = $data[$i];
+            if ($char === $this->conversion['enclosure']) {
+                // Check if it's an escaped quote
+                if ($inQuotes && isset($data[$i + 1]) && $data[$i + 1] === $this->conversion['enclosure']) {
+                    $currentRow .= $char . $data[$i + 1];
+                    $i++;
+                    continue;
+                }
+                $inQuotes = !$inQuotes;
+            }
+            if ($char === "\n" && !$inQuotes) {
+                $rows[] = $currentRow;
+                $currentRow = '';
+                continue;
+            }
+            $currentRow .= $char;
+        }
+        // Add the last row if there's content
+        if ($currentRow !== '') {
+            $rows[] = $currentRow;
+        }
+        return $rows;
     }
 }
