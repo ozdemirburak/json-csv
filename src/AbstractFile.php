@@ -2,28 +2,14 @@
 
 namespace OzdemirBurak\JsonCsv;
 
+use RuntimeException;
+
 abstract class AbstractFile
 {
-    /**
-     * @var array
-     */
-    protected $conversion = [];
+    protected array $conversion = [];
+    protected string $data = '';
+    protected string $filename = '';
 
-    /**
-     * @var string
-     */
-    protected $data = '';
-
-    /**
-     * @var string
-     */
-    protected $filename = '';
-
-    /**
-     * AbstractFile constructor.
-     *
-     * @param string|null $filepath
-     */
     public function __construct(?string $filepath = null)
     {
         if ($filepath !== null) {
@@ -31,95 +17,63 @@ abstract class AbstractFile
         }
     }
 
-    /**
-     * Load data from a file.
-     *
-     * @param string $filepath
-     */
     protected function loadFile(string $filepath): void
     {
         if (!is_readable($filepath)) {
-            throw new \RuntimeException("File not readable: $filepath");
+            throw new RuntimeException("File not readable: $filepath");
         }
-        [$this->filename, $this->data] = [pathinfo($filepath, PATHINFO_FILENAME), file_get_contents($filepath)];
+        $this->filename = pathinfo($filepath, PATHINFO_FILENAME);
+        $content = file_get_contents($filepath);
+        if ($content === false) {
+            throw new RuntimeException("Failed to read file: $filepath");
+        }
+        $this->data = $content;
     }
 
-    /**
-     * @param string|null $filename
-     * @param bool $exit
-     */
     public function convertAndDownload(?string $filename = null, bool $exit = true): void
     {
-        $filename = $filename ?? $this->filename;
-        $this->sendHeaders($filename);
-        echo $this->convert();
-        if ($exit === true) {
+        $filename ??= $this->filename;
+        $content = $this->convert();
+        $this->sendHeaders($filename, strlen($content));
+        echo $content;
+        if ($exit) {
             exit();
         }
     }
 
-    /**
-     * Send headers for download.
-     *
-     * @param string $filename
-     */
-    protected function sendHeaders(string $filename): void
+    protected function sendHeaders(string $filename, int $contentLength): void
     {
         header('Content-disposition: attachment; filename=' . $filename . '.' . $this->conversion['extension']);
         header('Content-type: ' . $this->conversion['type']);
+        header('Content-Length: ' . $contentLength);
     }
 
-    /**
-     * @param string $dataString
-     *
-     * @return $this
-     */
-    public function fromString(string $dataString): AbstractFile
+    public function fromString(string $dataString): static
     {
         $this->data = $dataString;
         return $this;
     }
 
-    /**
-     * @param string $path
-     *
-     * @return bool|int
-     */
-    public function convertAndSave(string $path): int
+    public function convertAndSave(string $path): int|false
     {
         return file_put_contents($path, $this->convert());
     }
 
-    /**
-     * @return string
-     */
     public function getData(): string
     {
         return $this->data;
     }
 
-    /**
-     * @return string
-     */
     public function getFilename(): string
     {
         return $this->filename;
     }
 
-    /**
-     * @param string $key
-     * @param string|int $value
-     *
-     * @return array
-     */
-    public function setConversionKey(string $key, $value): array
+    public function setConversionKey(string $key, string|int|bool|null $value): array
     {
         $this->conversion[$key] = $value;
         return $this->conversion;
     }
 
-    /**
-     * @return string
-     */
     abstract public function convert(): string;
 }

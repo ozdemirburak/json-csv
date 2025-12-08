@@ -2,7 +2,7 @@
 
 [![Latest Version on Packagist][ico-version]][link-packagist]
 [![Software License][ico-license]](LICENSE.md)
-[![Build Status][ico-travis]][link-travis]
+[![Build Status][ico-github-actions]][link-github-actions]
 [![Total Downloads][ico-downloads]][link-downloads]
 
 The most basic CSV to JSON and JSON to CSV converter library in PHP without any dependencies.
@@ -11,96 +11,108 @@ The most basic CSV to JSON and JSON to CSV converter library in PHP without any 
 
 Via Composer
 
-``` bash
-$ composer require ozdemirburak/json-csv
+```bash
+composer require ozdemirburak/json-csv
 ```
+
+Note: Requires PHP 8.1 or higher with JSON extension
 
 ## Usage
 
 ### JSON to CSV Converter
 
-``` php
+```php
 use OzdemirBurak\JsonCsv\File\Json;
 
 // JSON to CSV
-$json = new Json(__DIR__ . '/above.json');
+$json = new Json(__DIR__ . '/file.json');
 // To convert JSON to CSV string
 $csvString = $json->convert();
 // To set a conversion option then convert JSON to CSV and save
 $json->setConversionKey('utf8_encoding', true);
-$json->convertAndSave(__DIR__ . '/above.csv');
+$json->convertAndSave(__DIR__ . '/file.csv');
 // To convert JSON to CSV and force download on browser
 $json->convertAndDownload();
 ```
 
 You can also convert directly from a JSON string using the `fromString` method.
 
-``` php
-$csvString = (new Json())->fromString('{"name": "Buddha", "age": 80}')->convert();
+```php
+$csvString = (new Json())->fromString('{"name": "John", "age": 30}')->convert();
 ```
 
-Assume that the input JSON is something like below. 
+Assume that the input JSON is something like below.
 
 ```json
 [
   {
     "name": {
-      "common": "Turkey",
-      "official": "Republic of Turkey",
-      "native": "T\u00fcrkiye"
+      "common": "Türkiye",
+      "official": "Republic of Türkiye",
+      "native": "Türkiye"
     },
     "area": 783562,
     "latlng": [39, 35]
   },
   {
     "name": {
-      "common": "Israel",
-      "official": "State of Israel",
-      "native": "\u05d9\u05e9\u05e8\u05d0\u05dc"
+      "common": "Japan",
+      "official": "Japan",
+      "native": "日本"
     },
-    "area": 20770,
-    "latlng": [31.30, 34.45]
+    "area": 377975,
+    "latlng": [36, 138]
   }
 ]
 ```
 
 After the conversion, the resulting CSV data will look like below.
 
-**name\_common**|**name\_official**|**name\_native**|**area**|**latlng\_0**|**latlng\_1**
-:-----:|:-----:|:-----:|:-----:|:-----:|:-----:
-Turkey|Republic of Turkey|Türkiye|783562|39|35
-Israel|State of Israel|ישראל|20770|31.3|34.45
+| name_common  | name_official        | name_native  | area       | latlng_0 | latlng_1  |
+|--------------|----------------------|--------------|------------|----------|-----------|
+| Türkiye      | Republic of Türkiye  | Türkiye      | 783562     | 39       | 35        |
+| Japan        | Japan                | 日本           | 377975     | 36       | 138       |
 
+#### JSON Conversion Options
+
+| Option          | Type   | Default   | Description                          |
+|-----------------|--------|-----------|--------------------------------------|
+| `delimiter`     | string | `,`       | CSV field delimiter                  |
+| `enclosure`     | string | `"`       | CSV field enclosure character        |
+| `escape`        | string | `\`       | CSV escape character                 |
+| `join`          | string | `_`       | Character used to join nested keys   |
+| `null`          | mixed  | `null`    | Value to use for null/missing fields |
+| `utf8_encoding` | bool   | `false`   | Add UTF-8 BOM to output              |
 
 ### CSV to JSON Converter
 
-``` php
+```php
 use OzdemirBurak\JsonCsv\File\Csv;
 
 // CSV to JSON
-$csv = new Csv(__DIR__ . '/below.csv');
+$csv = new Csv(__DIR__ . '/file.csv');
 $csv->setConversionKey('options', JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
 // To convert CSV to JSON string
 $jsonString = $csv->convert();
 // To convert CSV to JSON and save
-$csv->convertAndSave(__DIR__ . '/below.json');
+$csv->convertAndSave(__DIR__ . '/file.json');
 // To convert CSV to JSON and force download on browser
 $csv->convertAndDownload();
 ```
 
 You can also convert directly from a CSV string using the `fromString` method.
 
-``` php
-$jsonString = (new Csv())->fromString('[{"name":"Buddha","age":"80"}]')->convert();
+```php
+$jsonString = (new Csv())->fromString("name,age\nJohn,30\n")->convert();
 ```
 
-Assume that the input CSV file is something like below. 
+Assume that the input CSV file is something like below.
 
-**SepalLength**|**SepalWidth**|**PetalLength**|**PetalWidth**|**Name**
-:-----:|:-----:|:-----:|:-----:|:-----:
-5.1|3.5|1.4|0.2|Iris-setosa                       
-7.0|3.2|4.7|1.4|Iris-versicolor                   
-6.3|3.3|6.0|2.5|Iris-virginica
+| SepalLength | SepalWidth  | PetalLength  | PetalWidth | Name            |
+|-------------|-------------|--------------|------------|-----------------|
+| 5.1         | 3.5         | 1.4          | 0.2        | Iris-setosa     |
+| 7.0         | 3.2         | 4.7          | 1.4        | Iris-versicolor |
+| 6.3         | 3.3         | 6.0          | 2.5        | Iris-virginica  |
 
 After the conversion, the resulting JSON data will look like below.
 
@@ -130,19 +142,26 @@ After the conversion, the resulting JSON data will look like below.
 ]
 ```
 
+#### CSV Conversion Options
+
+| Option      | Type   | Default   | Description                                            |
+|-------------|--------|-----------|--------------------------------------------------------|
+| `delimiter` | string | `,`       | CSV field delimiter                                    |
+| `enclosure` | string | `"`       | CSV field enclosure character                          |
+| `escape`    | string | `\`       | CSV escape character                                   |
+| `join`      | string | `_`       | Character used to split nested keys                    |
+| `numeric`   | bool   | `false`   | Set to `true` to convert numeric strings to numbers    |
+| `options`   | int    | `0`       | JSON encode flags (e.g., `JSON_PRETTY_PRINT`)          |
+
 ## Change log
 
 Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.
 
 ## Testing
 
-``` bash
-$ composer test
+```bash
+composer test
 ```
-
-## Known Issues
-
-Currently, there are not any issues that are known.
 
 ## Contributing
 
@@ -159,11 +178,11 @@ The MIT License (MIT). Please see [License File](LICENSE.md) for more informatio
 
 [ico-version]: https://img.shields.io/packagist/v/ozdemirburak/json-csv.svg?style=flat-square
 [ico-license]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square
-[ico-travis]: https://img.shields.io/travis/ozdemirburak/json-csv/master.svg?style=flat-square
+[ico-github-actions]: https://img.shields.io/github/actions/workflow/status/ozdemirburak/json-csv/tests.yml?branch=master&style=flat-square
 [ico-downloads]: https://img.shields.io/packagist/dt/ozdemirburak/json-csv.svg?style=flat-square
 
 [link-packagist]: https://packagist.org/packages/ozdemirburak/json-csv
-[link-travis]: https://travis-ci.org/ozdemirburak/json-csv
+[link-github-actions]: https://github.com/ozdemirburak/json-csv/actions/workflows/tests.yml
 [link-downloads]: https://packagist.org/packages/ozdemirburak/json-csv
 [link-author]: https://github.com/ozdemirburak
 [link-contributors]: ../../contributors
