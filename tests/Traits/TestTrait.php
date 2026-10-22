@@ -7,6 +7,26 @@ use OzdemirBurak\JsonCsv\File\Json;
 
 trait TestTrait
 {
+    /** @var list<string> */
+    private array $tempFiles = [];
+
+    protected function tearDown(): void
+    {
+        foreach ($this->tempFiles as $file) {
+            if (is_file($file)) {
+                unlink($file);
+            }
+        }
+        $this->tempFiles = [];
+    }
+
+    private function tempPath(string $extension): string
+    {
+        $path = sys_get_temp_dir() . '/json-csv-' . bin2hex(random_bytes(8)) . '.' . $extension;
+        $this->tempFiles[] = $path;
+        return $path;
+    }
+
     private function checkConversion(string $file): void
     {
         $method = 'init' . str_replace('Test', '', substr(strrchr(static::class, '\\'), 1));

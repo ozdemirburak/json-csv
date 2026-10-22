@@ -1,3 +1,3 @@
-name,gender,contact_email,contact_phone
+name,gender,contact.email,contact.phone
 Bruno,Male,bruno@one.com,"+33 (777) 712-93"
 Mary,Female,mary@one.com,"+66 (333) 456-7890"

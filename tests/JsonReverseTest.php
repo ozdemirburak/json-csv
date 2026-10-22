@@ -2,6 +2,8 @@
 
 namespace OzdemirBurak\JsonCsv\Tests;
 
+use OzdemirBurak\JsonCsv\File\Csv;
+use OzdemirBurak\JsonCsv\File\Json;
 use OzdemirBurak\JsonCsv\Tests\Traits\TestTrait;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -10,26 +12,18 @@ class JsonReverseTest extends TestCase
 {
     use TestTrait;
 
+    protected string $ext = 'json';
+
     private function checkReverseConversion(string $file, string $join = '_'): void
     {
-        $pathCsvOut = $this->path($file . '.out', 'csv');
-        $jsonConverter = $this->initJson($file);
-        $jsonConverter->setConversionKey('join', $join);
-        $jsonConverter->convertAndSave($pathCsvOut);
+        $pathCsvOut = $this->tempPath('csv');
+        $this->initJson($file)->setConversionKey('join', $join)->convertAndSave($pathCsvOut);
 
-        $csvConverter = $this->initCsv($file . '.out');
-        $csvConverter->setConversionKey('join', $join);
-        $csvConverter->setConversionKey('numeric', true);
-        $csvConverter->convertAndSave($pathJsonOut = $this->path($file . '.out', 'json'));
+        $pathJsonOut = $this->tempPath('json');
+        (new Csv($pathCsvOut))->setConversionKey('join', $join)->setConversionKey('numeric', true)
+            ->convertAndSave($pathJsonOut);
 
-        try {
-            $this->assertJsonFileEqualsJsonFile($this->path($file, 'json'), $pathJsonOut);
-        } finally {
-            unlink($pathCsvOut);
-            $this->assertFileDoesNotExist($pathCsvOut);
-            unlink($pathJsonOut);
-            $this->assertFileDoesNotExist($pathJsonOut);
-        }
+        $this->assertJsonFileEqualsJsonFile($this->path($file, 'json'), $pathJsonOut);
     }
 
     #[Group('json-reverse-test')]
@@ -53,14 +47,17 @@ class JsonReverseTest extends TestCase
     #[Group('json-reverse-test')]
     public function testStats(): void
     {
-        // The stats.json file uses an associative array at the top level (keyed by person slug)
-        // and has date strings as keys. This is a complex edge case that the current implementation
-        // handles differently - the reverse conversion produces a different structure.
-        // This is expected behavior: when you have associative arrays with string keys,
-        // the round-trip conversion may not produce identical JSON.
-        $this->markTestSkipped(
-            'Stats uses associative arrays with string keys (dates), which cannot perfectly round-trip. ' .
-            'This is expected behavior for edge cases with non-numeric string keys that look like dates.'
-        );
+        // Records keyed by id become rows without the ids, so compare with the values only
+        $csv = (new Csv())->fromString($this->initJson('stats')->convert())->setConversionKey('numeric', true);
+        $expected = array_values((array) json_decode((string) file_get_contents($this->path('stats', 'json')), true));
+        $this->assertSame($expected, $csv->toArray());
+    }
+
+    #[Group('json-reverse-test')]
+    public function testBackslashesRoundTripWithDefaults(): void
+    {
+        $data = [['a' => 'C:\\dir\\', 'b' => 'p\\"q'], ['a' => 'x', 'b' => 'y']];
+        $csv = (new Json())->fromString(json_encode($data))->convert();
+        $this->assertEquals($data, json_decode((new Csv())->fromString($csv)->convert(), true));
     }
 }

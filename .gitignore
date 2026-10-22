@@ -5,5 +5,6 @@
 /vendor/
 .phpunit.cache
 .phpunit.result.cache
-composer.lock
-CLAUDE.MD
+/CLAUDE.md
+/coverage/
+/tests/data/*.out.*
