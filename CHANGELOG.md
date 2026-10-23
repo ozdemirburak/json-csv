@@ -2,6 +2,10 @@
 
 All Notable changes to `json-csv` will be documented in this file.
 
+## 2.0.1 - 2026-10-23
+
+- Updated the author homepage to https://ozdemir.dev and the license year.
+
 ## 2.0.0 - 2026-10-23
 
 ### Breaking changes
